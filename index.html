@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Number Click Game</title>
   <style>
     body {
@@ -22,8 +22,6 @@
     }
     #grid {
       display: grid;
-      grid-template-columns: repeat(5, 60px);
-      grid-template-rows: repeat(5, 60px);
       gap: 10px;
     }
     .cell {
@@ -45,8 +43,8 @@
       margin-top: 20px;
       font-size: 20px;
     }
-    #play-again, #screenshot-btn {
-      margin-top: 20px;
+    button {
+      margin-top: 15px;
       padding: 10px 20px;
       font-size: 16px;
       cursor: pointer;
@@ -57,11 +55,12 @@
   </style>
 </head>
 <body>
-  <h1>Click Numbers 1 to 25</h1>
+  <h1>Click Numbers in Order</h1>
   <div id="timer">Time: 0.000s</div>
   <div id="grid"></div>
   <div id="status"></div>
-  <button id="play-again" onclick="location.reload()">Restart</button>
+  <button id="play-again">Restart</button>
+  <button id="mode-toggle">Mode: Easy (1–25)</button>
   <button id="screenshot-btn">Capture Screenshot</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -71,12 +70,12 @@
     const timerDisplay = document.getElementById('timer');
     const screenshotBtn = document.getElementById('screenshot-btn');
     const playAgainBtn = document.getElementById('play-again');
+    const modeToggleBtn = document.getElementById('mode-toggle');
+
     let expected = 1;
     let startTime = null;
     let timerInterval = null;
-
-    const numbers = Array.from({ length: 25 }, (_, i) => i + 1)
-      .sort(() => Math.random() - 0.5);
+    let maxNumber = 25;
 
     function startTimer() {
       startTime = performance.now();
@@ -90,25 +89,51 @@
       clearInterval(timerInterval);
     }
 
-    numbers.forEach((num) => {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      cell.textContent = num;
-      cell.addEventListener('click', () => {
-        if (parseInt(cell.textContent) === expected && !cell.classList.contains('clicked')) {
-          if (expected === 1) startTimer();
-          cell.classList.add('clicked');
-          expected++;
-          if (expected > 25) {
-            stopTimer();
-            status.textContent = '🎉 You Win!';
-            screenshotBtn.style.display = 'inline-block';
-            playAgainBtn.textContent = 'Play Again';
+    function resetTimer() {
+      stopTimer();
+      startTime = null;
+      timerDisplay.textContent = 'Time: 0.000s';
+    }
+
+    function generateGrid() {
+      expected = 1;
+      resetTimer();
+      status.textContent = '';
+      screenshotBtn.style.display = 'none';
+      playAgainBtn.textContent = 'Restart';
+
+      grid.innerHTML = '';
+      if (maxNumber === 25) {
+        grid.style.gridTemplateColumns = 'repeat(5, 60px)';
+        grid.style.gridTemplateRows = 'repeat(5, 60px)';
+      } else {
+        grid.style.gridTemplateColumns = 'repeat(7, 60px)';
+        grid.style.gridTemplateRows = 'repeat(8, 60px)';
+      }
+
+      const numbers = Array.from({ length: maxNumber }, (_, i) => i + 1)
+        .sort(() => Math.random() - 0.5);
+
+      numbers.forEach((num) => {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.textContent = num;
+        cell.addEventListener('click', () => {
+          if (parseInt(cell.textContent) === expected && !cell.classList.contains('clicked')) {
+            if (expected === 1) startTimer();
+            cell.classList.add('clicked');
+            expected++;
+            if (expected > maxNumber) {
+              stopTimer();
+              status.textContent = '🎉 You Win!';
+              screenshotBtn.style.display = 'inline-block';
+              playAgainBtn.textContent = 'Play Again';
+            }
           }
-        }
+        });
+        grid.appendChild(cell);
       });
-      grid.appendChild(cell);
-    });
+    }
 
     screenshotBtn.addEventListener('click', () => {
       html2canvas(document.body).then(canvas => {
@@ -118,6 +143,18 @@
         link.click();
       });
     });
+
+    modeToggleBtn.addEventListener('click', () => {
+      maxNumber = maxNumber === 25 ? 50 : 25;
+      modeToggleBtn.textContent = maxNumber === 25 ? 'Mode: Hard (1–50)' : 'Mode: Easy (1–25)';
+      generateGrid();
+    });
+
+    playAgainBtn.addEventListener('click', () => {
+      generateGrid();
+    });
+
+    generateGrid();
   </script>
 </body>
 </html>

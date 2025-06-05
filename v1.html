@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Number Click Game</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 50px;
+      background: #f0f0f0;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #timer {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      grid-template-rows: repeat(5, 60px);
+      gap: 10px;
+    }
+    .cell {
+      background: white;
+      border: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .cell.clicked {
+      background: #8bc34a;
+      color: white;
+      cursor: default;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 20px;
+    }
+    #play-again, #screenshot-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #screenshot-btn {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Click Numbers 1 to 25</h1>
+  <div id="timer">Time: 0.000s</div>
+  <div id="grid"></div>
+  <div id="status"></div>
+  <button id="play-again" onclick="location.reload()">Restart</button>
+  <button id="screenshot-btn">Capture Screenshot</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    const grid = document.getElementById('grid');
+    const status = document.getElementById('status');
+    const timerDisplay = document.getElementById('timer');
+    const screenshotBtn = document.getElementById('screenshot-btn');
+    const playAgainBtn = document.getElementById('play-again');
+    let expected = 1;
+    let startTime = null;
+    let timerInterval = null;
+
+    const numbers = Array.from({ length: 25 }, (_, i) => i + 1)
+      .sort(() => Math.random() - 0.5);
+
+    function startTimer() {
+      startTime = performance.now();
+      timerInterval = setInterval(() => {
+        const elapsed = (performance.now() - startTime) / 1000;
+        timerDisplay.textContent = `Time: ${elapsed.toFixed(3)}s`;
+      }, 10);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+    }
+
+    numbers.forEach((num) => {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.textContent = num;
+      cell.addEventListener('click', () => {
+        if (parseInt(cell.textContent) === expected && !cell.classList.contains('clicked')) {
+          if (expected === 1) startTimer();
+          cell.classList.add('clicked');
+          expected++;
+          if (expected > 25) {
+            stopTimer();
+            status.textContent = '🎉 You Win!';
+            screenshotBtn.style.display = 'inline-block';
+            playAgainBtn.textContent = 'Play Again';
+          }
+        }
+      });
+      grid.appendChild(cell);
+    });
+
+    screenshotBtn.addEventListener('click', () => {
+      html2canvas(document.body).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'screenshot.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    });
+  </script>
+</body>
+</html>
